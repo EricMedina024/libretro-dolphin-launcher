@@ -47,9 +47,9 @@ void retro_get_system_info(struct retro_system_info *info)
 #ifndef GIT_VERSION
 #define GIT_VERSION ""
 #endif
-   info->library_version  = "1.2.0" GIT_VERSION;
+   info->library_version  = "1.2.0-windows" GIT_VERSION;
    info->need_fullpath    = true;
-   info->valid_extensions = "elf|dol|gcm|iso|wbfs|ciso|gcz|wad";
+   info->valid_extensions = "elf|dol|gcm|iso|wbfs|ciso|gcz|wad|rvxz";
 }
 
 static retro_video_refresh_t video_cb;
@@ -141,47 +141,37 @@ void retro_run(void)
  */
 bool retro_load_game(const struct retro_game_info *info)
 {
-   // Launch without the gui if available (Dolphin 5).
-   char command[512] = "dolphin-emu-nogui";
-
-   // Check if there is content to load.
-   if (info != NULL && info->path != NULL && info->path[0] != '\0') {
-      sprintf(command, "%s -e \"%s\"", command, info->path);
+   char* dolphinDir = getenv("DOLPHIN_DIR");
+   if (dolphinDir) {
+       if (strlen(dolphinDir) <= 512) {
+           char launchCommand[1024];
+           if (info != NULL && info->path != NULL && info->path[0] != '\0') {
+               if (strlen(info->path) < 400) {
+                   // the /wait is a total hack lol... makes everything much smoother though
+                   sprintf(launchCommand, "start \"\" /b /wait \"%s\\Dolphin.exe\" -b -e \"%s\"", dolphinDir, info->path);
+                   int dolphinExitCode = system(launchCommand);
+                   if (dolphinExitCode == 0) {
+                       printf("libretro-dolphin-launcher: Launched Dolphin.\n");
+                       return true;
+                   } else {
+                       printf("libretro-dolphin-launcher: Dolphin returned exit code %d.\n", dolphinExitCode);
+                       return false;
+                   }
+               } else {
+                   printf("libretro-dolphin-launcher: Failed running Dolphin: Game path too long.\n");
+                   return false;
+               }
+           } else {
+               printf("libretro-dolphin-launcher: Failed running Dolphin: No path provided.\n");
+               return false;
+           }
+       } else {
+           printf("libretro-dolphin-launcher: Failed running Dolphin: DOLPHIN_DIR too long (max 512 chars).\n");
+           return false;
+       }
+   } else {
+       printf("libretro-dolphin-launcher: Failed running Dolphin: Please set \"DOLPHIN_DIR\" env var.\n");
    }
-
-   // Check if running Dolphin works.
-   if (system(command) == 0) {
-      printf("libretro-dolphin-launcher: Completed dolphin-emu-nogui\n");
-      return true;
-   }
-   printf("libretro-dolphin-launcher: dolphin-emu-nogui not found. Attempting dolphin-emu...\n");
-
-   // Dolphin 4 does not have dolphin-emu-nogui.
-   strcpy(command, "dolphin-emu");
-   if (info != NULL && info->path != NULL && info->path[0] != '\0') {
-      // Execute with --batch.
-      sprintf(command, "%s --batch --exec=\"%s\"", command, info->path);
-   }
-
-   if (system(command) == 0) {
-      printf("libretro-dolphin-launcher: Finished dolphin-emu\n");
-      return true;
-   }
-
-   // Flatpak
-   printf("libretro-dolphin-launcher: dolphin-emu not found. Attempting Flatpak...\n");
-   strcpy(command, "flatpak run org.DolphinEmu.dolphin-emu");
-   if (info != NULL && info->path != NULL && info->path[0] != '\0') {
-      // Execute with --batch.
-      sprintf(command, "%s --batch --exec=\"%s\"", command, info->path);
-   }
-   if (system(command) == 0) {
-      printf("libretro-dolphin-launcher: Finished running Dolphin through Flatpak.\n");
-      return true;
-   }
-
-   printf("libretro-dolphin-launcher: Failed running Dolphin. Install it and try again.\n");
-   return false;
 }
 
 void retro_unload_game(void)
