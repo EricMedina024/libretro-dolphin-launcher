@@ -49,7 +49,7 @@ void retro_get_system_info(struct retro_system_info *info)
 #endif
    info->library_version  = "1.2.0-windows" GIT_VERSION;
    info->need_fullpath    = true;
-   info->valid_extensions = "elf|dol|gcm|iso|wbfs|ciso|gcz|wad|rvxz";
+   info->valid_extensions = "elf|dol|gcm|iso|wbfs|ciso|gcz|wad|rvz";
 }
 
 static retro_video_refresh_t video_cb;
