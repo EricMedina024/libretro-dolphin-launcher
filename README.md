@@ -1,3 +1,13 @@
+# Fork Info
+
+This is a fork of libretro-dolphin-launcher to add even hackier Windows support for invoking Dolphin directly from the RetroArch
+menu without using the forked Dolphin core. It also adds support for the modern [RVZ rom format](https://es.dolphin-emu.org/blog/2020/07/05/dolphin-progress-report-may-and-june-2020/#50-12188-support-for-rvz-and-wia-disc-formats-by-josjuice). **Please note that this project (like the original) runs Dolphin via a
+`system` call, which is pretty unsafe and could lead to command injection from untrusted inputs. If you are only running
+games from sources you trust, you should be okay (but please be cautious!).** To use, install the core as normal and then set the environment variable
+`DOLPHIN_DIR` to the path where your `Dolphin.exe` is located (no quotes!). You should then be able to launch games via
+the RetroArch UI.
+
+
 # libretro-dolphin-launcher
 
 Launch Nintendo Wii and GameCube games through [Dolphin](https://dolphin-emu.org) native, directly from [RetroArch](http://www.libretro.com/).
